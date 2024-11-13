@@ -1,7 +1,4 @@
-from src.main.models.llm import LLM
-
-
-class Cloud(LLM):
+class LLM:
 
     def summarize_text(self, text):
         raise NotImplementedError
