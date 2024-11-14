@@ -14,5 +14,5 @@ async def summarize_pdf(file: UploadFile = File(...)):
     return {"summary": summary}
 
 @app.post("/ask")
-async def ask_question(question: str, summary: str):
-    raise NotImplementedError
+async def ask_question(question: str):
+    return "Sample Answer"

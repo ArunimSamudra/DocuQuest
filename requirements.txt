@@ -2,3 +2,4 @@ fastapi
 fitz
 mlx
 mlx_lm
+streamlit
