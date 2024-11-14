@@ -1,7 +1,7 @@
 from mlx_lm import generate, load
 
-from src.main.config import Config
-from src.main.models.llm import LLM
+from main.config import Config
+from main.models.llm import LLM
 
 
 class Local(LLM):

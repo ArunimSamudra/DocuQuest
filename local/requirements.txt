@@ -1,0 +1,8 @@
+fastapi
+mlx
+mlx_lm
+streamlit
+bert_score
+evaluate
+uvicorn
+PyPDF2

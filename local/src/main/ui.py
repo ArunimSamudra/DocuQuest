@@ -73,13 +73,26 @@ if st.session_state.current_session:
             st.markdown(message["content"])
 
     # Handle file upload and summarization
-    uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
+    uploaded_file = st.file_uploader("Upload a PDF or TXT file", type=["pdf", "txt"])
     if uploaded_file is not None:
-        # Call FastAPI to summarize the PDF
-        response = requests.post(
-            f"{Config.SERVER_URL}/summarize", files={"file": uploaded_file}
-        )
-        if response.status_code == 200:
+        if uploaded_file.type == "application/pdf":
+            # Call FastAPI to summarize the PDF
+            response = requests.post(
+                f"{Config.SERVER_URL}/summarize", files={"file": uploaded_file}
+            )
+        elif uploaded_file.type == "text/plain":
+            # Read the TXT file content
+            txt_content = uploaded_file.read().decode("utf-8")
+            # Send the content directly to FastAPI for summarization
+            response = requests.post(
+                f"{Config.SERVER_URL}/summarize", json={"text": txt_content}
+            )
+        else:
+            with st.chat_message("assistant"):
+                st.write(text_streamer("Please upload compatible version"))
+            chat_history.append({"role": "assistant", "content": "Please upload compatible version"})
+
+        if response is not None and response.status_code == 200:
             summary = response.json().get("summary")
             chat_history.append({"role": "assistant", "content": summary})
             with st.chat_message("assistant"):

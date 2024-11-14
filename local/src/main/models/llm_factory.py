@@ -1,5 +1,5 @@
-from src.main.models.cloud_llm import Cloud
-from src.main.models.local_llm import Local
+from main.models.cloud_llm import Cloud
+from main.models.local_llm import Local
 
 
 class LLMFactory:

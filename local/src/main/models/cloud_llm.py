@@ -1,4 +1,4 @@
-from src.main.models.llm import LLM
+from main.models.llm import LLM
 
 
 class Cloud(LLM):
