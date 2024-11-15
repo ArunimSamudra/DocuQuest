@@ -30,7 +30,7 @@ def response_generator():
 def text_streamer(text):
     for word in text.split():
         yield word + " "
-        time.sleep(0.5)
+        time.sleep(0.05)
 
 
 # Sidebar: Session management
@@ -78,14 +78,17 @@ if st.session_state.current_session:
         if uploaded_file.type == "application/pdf":
             # Call FastAPI to summarize the PDF
             response = requests.post(
-                f"{Config.SERVER_URL}/summarize", files={"file": uploaded_file}
+                f"{Config.SERVER_URL}/summarize",
+                files={"file": uploaded_file.getvalue()},
+                data={"file_type": "pdf"}  # Correctly passing the flag for file type
             )
         elif uploaded_file.type == "text/plain":
             # Read the TXT file content
             txt_content = uploaded_file.read().decode("utf-8")
             # Send the content directly to FastAPI for summarization
             response = requests.post(
-                f"{Config.SERVER_URL}/summarize", json={"text": txt_content}
+                f"{Config.SERVER_URL}/summarize",
+                data={"text": txt_content, "file_type": "txt"}  # Use json for text and file_type
             )
         else:
             with st.chat_message("assistant"):
@@ -96,7 +99,7 @@ if st.session_state.current_session:
             summary = response.json().get("summary")
             chat_history.append({"role": "assistant", "content": summary})
             with st.chat_message("assistant"):
-                st.write_stream(summary)
+                st.write(text_streamer(summary))
         else:
             st.error("Error summarizing the PDF.")
 

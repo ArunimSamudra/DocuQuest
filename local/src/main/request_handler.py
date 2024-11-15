@@ -1,5 +1,5 @@
-from main.models.llm_factory import LLMFactory
-from main.modules.decision_module import use_cloud_llm
+from app.models.llm_factory import LLMFactory
+from app.modules.decision_module import use_cloud_llm
 
 
 class RequestHandler:
