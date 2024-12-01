@@ -2,8 +2,8 @@ import streamlit as st
 import random
 import time
 import requests
-from config import Config
 
+SERVER_URL = "http://127.0.0.1:8080"
 st.title("DocuQuest")
 
 # Initialize the session state if not already initialized
@@ -78,7 +78,7 @@ if st.session_state.current_session:
         if uploaded_file.type == "application/pdf":
             # Call FastAPI to summarize the PDF
             response = requests.post(
-                f"{Config.SERVER_URL}/summarize",
+                f"{SERVER_URL}/summarize",
                 files={"file": uploaded_file.getvalue()},
                 data={"file_type": "pdf"}  # Correctly passing the flag for file type
             )
@@ -87,7 +87,7 @@ if st.session_state.current_session:
             txt_content = uploaded_file.read().decode("utf-8")
             # Send the content directly to FastAPI for summarization
             response = requests.post(
-                f"{Config.SERVER_URL}/summarize",
+                f"{SERVER_URL}/summarize",
                 data={"text": txt_content, "file_type": "txt"}  # Use json for text and file_type
             )
         else:
@@ -115,7 +115,7 @@ if st.session_state.current_session:
         if uploaded_file is not None:
             # Call the ask endpoint to get the answer
             ask_response = requests.post(
-                f"{Config.SERVER_URL}/ask", json={"question": prompt}
+                f"{SERVER_URL}/ask", json={"question": prompt}
             )
             if ask_response.status_code == 200:
                 answer = ask_response.json().get("answer")

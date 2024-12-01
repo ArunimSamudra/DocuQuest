@@ -1,12 +1,13 @@
 from mlx_lm import generate, load
 
-from main.config import Config
+from main.utils.config import Config
 from main.models.llm import LLM
 
 
 class Local(LLM):
 
     def __init__(self):
+        # TODO load model on app startup
         self.model, self.tokenizer = load(path_or_hf_repo=Config.LOCAL_MODEL_PATH)
         self.generation_args = {
             "temp": 0.7,
@@ -28,7 +29,6 @@ class Local(LLM):
             model=self.model,
             tokenizer=self.tokenizer,
             prompt=prompt,
-            # max_tokens=max_tokens,
             verbose=True,
             **self.generation_args,
         )
