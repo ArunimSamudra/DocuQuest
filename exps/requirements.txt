@@ -3,3 +3,6 @@ bert_score
 pandas
 textstat
 scikit-learn
+absl-py
+nltk
+rouge-score

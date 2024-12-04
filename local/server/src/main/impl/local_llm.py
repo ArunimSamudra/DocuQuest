@@ -1,8 +1,7 @@
 import time
-import tracemalloc
 
+import psutil
 from mlx_lm import generate
-
 from main.impl.llm import LLM
 
 
@@ -36,7 +35,8 @@ class Local(LLM):
         )
 
         # Measure time and memory
-        tracemalloc.start()
+        process = psutil.Process()
+        start_memory = process.memory_info().rss / (1024**2)
         start_time = time.time()
 
         # Perform text generation
@@ -44,30 +44,22 @@ class Local(LLM):
             model=self.model,
             tokenizer=self.tokenizer,
             prompt=prompt,
-            verbose=True,
+            verbose=False,
             **self.generation_args,
         )
 
         # End time and memory measurement
         end_time = time.time()
-        current, peak = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
+        end_memory = process.memory_info().rss / (1024**2)
 
         # Calculate metrics
         time_taken = end_time - start_time
-        current_memory = current / 10 ** 6  # Convert to MB
-        peak_memory = peak / 10 ** 6  # Convert to MB
-
-        # Log results
-        print(f"Time taken: {time_taken:.2f} seconds")
-        print(f"Memory used: {current_memory:.2f} MB")
-        print(f"Peak memory: {peak_memory:.2f} MB")
+        memory_used = end_memory - start_memory
 
         return {
             "summary": output,
             "time_taken": f"{time_taken:.2f} seconds",
-            "memory_used": f"{current_memory:.2f} MB",
-            "peak_memory": f"{peak_memory:.2f} MB",
+            "memory_used": f"{memory_used:.2f} MB",
         }
 
     def answer(self, context, question):

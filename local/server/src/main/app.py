@@ -4,7 +4,7 @@ import uvicorn
 from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 
-from main.utils.config import Config
+from main.config import Config
 from main.modules.doc_handler import extract_text_from_pdf
 from main.request_handler import RequestHandler
 from mlx_lm import load
@@ -20,8 +20,7 @@ class TextRequest(BaseModel):
 @app.on_event("startup")
 async def load_model():
     global model, tokenizer
-    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    model, tokenizer = load(path_or_hf_repo=os.path.join(ROOT_DIR, Config.LOCAL_MODEL_PATH))
+    model, tokenizer = load(Config.LOCAL_MODEL_PATH)
     print("Model loaded successfully.")
 
 # Dependency to provide the llm
