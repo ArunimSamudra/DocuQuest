@@ -1,1 +1,5 @@
-beam-client
+google-cloud-aiplatform
+huggingface_hub
+transformers
+torch
+flask

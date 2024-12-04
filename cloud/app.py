@@ -1,84 +1,28 @@
-import itertools
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from flask import app, request, jsonify
 
-from beam import endpoint, Image, Volume, env
+LOCAL_MODEL_DIR = "./llama_model"
 
+# Load the llm and tokenizer
+model = AutoModelForCausalLM.from_pretrained(LOCAL_MODEL_DIR)
+tokenizer = AutoTokenizer.from_pretrained(LOCAL_MODEL_DIR)
 
-if env.is_remote():
-    import torch
-    import os
-    import pandas as pd
-    from tqdm import tqdm
-    from datasets import load_dataset, Dataset
-    from torch.utils.data import DataLoader
-    import torch.nn as nn
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+print("Model and tokenizer successfully loaded.")
 
-# Model parameters
-MODEL_NAME = "meta-llama/Meta-Llama-3.1-8B"
-VOLUME_PATH = "./models"
+# Move llm to GPU if available
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = model.to(device)
 
-
-def load_models():
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, cache_dir=VOLUME_PATH)
-    tokenizer.pad_token = tokenizer.eos_token
-    print("tokenizer loaded")
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
-        device_map="auto",
-        torch_dtype=torch.float16,
-        cache_dir=VOLUME_PATH
-    )
-    print("model loaded")
-    return model, tokenizer
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.json
+    input_text = data["text"]
+    inputs = tokenizer(input_text, return_tensors="pt")
+    outputs = model.generate(**inputs)
+    result = tokenizer.decode(outputs[0])
+    return jsonify({"generated_text": result})
 
 
-def main(context, **inputs):
-    # Load model, tokenizer
-    model, tokenizer = context.on_start_value
-
-    messages = inputs.pop("messages", None)
-    if not messages:
-        return {"error": "Please provide messages for text generation."}
-
-    generate_args = {
-        "use_cache": True,
-        "eos_token_id": tokenizer.eos_token_id,
-        "pad_token_id": tokenizer.pad_token_id,
-    }
-
-    model_inputs = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    inputs = tokenizer(model_inputs, return_tensors="pt", padding=True)
-    input_ids = inputs["input_ids"].to("cuda")
-    attention_mask = inputs["attention_mask"].to("cuda")
-
-    with torch.no_grad():
-        outputs = model.generate(
-            input_ids=input_ids, attention_mask=attention_mask, **generate_args
-        )
-        output_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return {"output": output_text}
-
-
-@endpoint(
-    secrets=["HF_TOKEN"],
-    on_start=load_models,
-    name="summarizer",
-    cpu=2,
-    memory="32Gi",
-    gpu="A100-40",
-    image=Image(
-        python_version="python3.10",
-        python_packages=["torch", "transformers", "accelerate"],
-    ),
-    volumes=[
-        Volume(
-            name="cached_models",
-            mount_path=VOLUME_PATH,
-        )
-    ],
-)
-def summarize(context, **inputs):
-    return main(context, **inputs)
-
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=8080)
