@@ -39,6 +39,7 @@ def use_cloud_llm(document_text):
     #     return False
     # elif prediction == 1: ##medium
     #     print("Routing to cloud: Document is classified as medium complexity.")
+    #   maybe here decide based on doc length
     #     return True
     # elif prediction == 2: ##diffcult
     #     print("Routing to cloud: Document is classified as difficult.")

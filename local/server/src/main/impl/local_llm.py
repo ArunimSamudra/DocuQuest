@@ -19,9 +19,6 @@ class Local(LLM):
         }
 
     def summarize_text(self, text):
-        max_tokens = 1_000
-
-        # Improved system prompt
         prompt = (
             "You are a highly intelligent and concise text summarization assistant. "
             "Your task is to extract the key points and summarize the given text clearly and accurately. "
@@ -45,7 +42,7 @@ class Local(LLM):
             tokenizer=self.tokenizer,
             prompt=prompt,
             verbose=False,
-            **self.generation_args,
+            #**self.generation_args,
         )
 
         # End time and memory measurement
@@ -63,4 +60,27 @@ class Local(LLM):
         }
 
     def answer(self, context, question):
-        raise NotImplementedError
+        system_prompt = (
+            "You are a highly intelligent and context-aware assistant. Your role is to help the user "
+            "answer questions accurately and concisely based on the provided context. Use the context "
+            "carefully to generate relevant responses. If the context does not contain enough information "
+            "to answer the question, let the user know by stating: 'The context does not provide enough information to answer this question.'"
+        )
+        text = f"Context: {context}\n\nQuestion: {question}\nAnswer:"
+        conversation = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+
+        # Generate prompt using tokenizer
+        prompt = self.tokenizer.apply_chat_template(
+            conversation=conversation, tokenize=False, add_generation_prompt=True
+        )
+        output = generate(
+            model=self.model,
+            tokenizer=self.tokenizer,
+            prompt=prompt,
+            verbose=False,
+            **self.generation_args,
+        )
+        return {"answer": output}

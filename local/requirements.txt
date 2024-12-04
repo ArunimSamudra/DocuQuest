@@ -13,3 +13,5 @@ beam
 psutil
 textstat
 scikit-learn
+langchain_text_splitters
+langchain_openai

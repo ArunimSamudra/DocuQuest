@@ -1,31 +1,29 @@
-import os
+from contextlib import asynccontextmanager
 
 import uvicorn
-from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from pydantic import BaseModel
 
 from main.config import Config
 from main.modules.doc_handler import extract_text_from_pdf
 from main.request_handler import RequestHandler
 from mlx_lm import load
 
-app = FastAPI()
+ml_models = {}
 
-
-class TextRequest(BaseModel):
-    text: str
-    file_type: str
-
-# Load the llm during app startup
-@app.on_event("startup")
-async def load_model():
-    global model, tokenizer
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML model
     model, tokenizer = load(Config.LOCAL_MODEL_PATH)
     print("Model loaded successfully.")
+    ml_models['model'] = model
+    ml_models['tokenizer'] = tokenizer
+    yield
+    # Clean up the ML models and release the resources
+    ml_models.clear()
 
-# Dependency to provide the llm
-def get_model():
-    return model, tokenizer
+app = FastAPI(lifespan=lifespan)
+request_handler = RequestHandler()
 
 @app.post("/summarize")
 async def summarize_pdf(
@@ -42,13 +40,15 @@ async def summarize_pdf(
         document_text = text
     else:
         raise HTTPException(status_code=400, detail="No file or text content provided.")
-    response = RequestHandler().summarize_text(model, tokenizer, document_text)
+    response = await request_handler.summarize_text(ml_models['model'], ml_models['tokenizer'], document_text)
     return response
 
+class QuestionRequest(BaseModel):
+    question: str
 
 @app.post("/ask")
-async def ask_question(question: str):
-    return "Sample Answer"
+async def ask_question(request: QuestionRequest):
+    return await request_handler.answer(request.question, ml_models['model'], ml_models['tokenizer'])
 
 
 @app.get("/hello")
@@ -57,5 +57,4 @@ async def hello_world():
 
 
 if __name__ == "__main__":
-    # export PYTHONPATH=$(pwd)/src
     uvicorn.run(app, host="127.0.0.1", port=8080)
