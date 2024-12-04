@@ -1,3 +1,5 @@
+import os
+
 import uvicorn
 from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
@@ -14,14 +16,15 @@ class TextRequest(BaseModel):
     text: str
     file_type: str
 
-# Load the model during app startup
+# Load the llm during app startup
 @app.on_event("startup")
 async def load_model():
-    global model, tokenizerm
-    model, tokenizer = load(path_or_hf_repo=Config.LOCAL_MODEL_PATH)
+    global model, tokenizer
+    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+    model, tokenizer = load(path_or_hf_repo=os.path.join(ROOT_DIR, Config.LOCAL_MODEL_PATH))
     print("Model loaded successfully.")
 
-# Dependency to provide the model
+# Dependency to provide the llm
 def get_model():
     return model, tokenizer
 
@@ -40,8 +43,8 @@ async def summarize_pdf(
         document_text = text
     else:
         raise HTTPException(status_code=400, detail="No file or text content provided.")
-    summary = RequestHandler().summarize_text(document_text)
-    return {"summary": summary}
+    response = RequestHandler().summarize_text(model, tokenizer, document_text)
+    return response
 
 
 @app.post("/ask")
