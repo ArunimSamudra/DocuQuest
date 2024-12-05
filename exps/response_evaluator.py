@@ -1,6 +1,6 @@
 import json
+import time
 
-import pandas as pd
 from evaluate import load
 from bert_score import score
 import textstat
@@ -127,10 +127,11 @@ def train_model():
     print("Model saved as 'logistic_regression_model.pkl'.")
 
 
-def summarize_local(text):
+def summarize(text):
     url = "http://127.0.0.1:8080/summarize"
     payload = {'file_type': 'txt',
-               'text': text
+               'text': text,
+               'session_id': '1'
                }
     headers = {}
     response = requests.request("POST", url, headers=headers, data=payload, files=[])
@@ -139,106 +140,134 @@ def summarize_local(text):
 
 
 def perform_experiments():
-    # Initialize results list
+   # Initialize results list
     results = []
     # Load dataset
     df = pd.read_parquet('dataset/x-sum.parquet')
-    # Randomly sample 500 rows
-    sampled_df = df.sample(500, random_state=42)
-    for _, row in sampled_df.iterrows():
-        text = row['text']
-        target_summary = row['label']
+    # Randomly sample 50 rows
+    sampled_df = df.sample(50, random_state=42)
+    print("---------X-SUM---------")
+    try:
+        for _, row in sampled_df.iterrows():
+            text = row['text']
+            target_summary = row['label']
 
-        # Summarize locally
-        response = summarize_local(text)
-        generated_summary = response["summary"]
+            # Summarize locally
+            response = summarize(text)
+            while "error" in response:
+                response = summarize(text)
+            generated_summary = response["summary"]
 
-        # Evaluate summary quality
-        evaluation = evaluate_summary_quality(generated_summary, target_summary)
+            # Evaluate summary quality
+            evaluation = evaluate_summary_quality(generated_summary, target_summary)
 
-        # Append results
-        results.append({
-            "text": text,
-            "generated_summary": generated_summary,
-            "original_summary": target_summary,
-            "len(text)": len(text),
-            "len(summary)": len(generated_summary),
-            "len(target_summary)": len(target_summary),
-            "time_taken": response["time_taken"],
-            "memory_used": response["memory_used"],
-            "rouge1": evaluation["ROUGE"]["rouge1"],
-            "rouge2": evaluation["ROUGE"]["rouge2"],
-            "rougeL": evaluation["ROUGE"]["rougeL"],
-            "BERTScore F1": evaluation["BERTScore F1"],
-            "complexity": "easy"
-        })
-    # Load dataset
-    df = pd.read_parquet('dataset/arxiv.parquet')
-    # Randomly sample 500 rows
-    sampled_df = df.sample(500, random_state=42)
-    for _, row in sampled_df.iterrows():
-        text = row['article']
-        target_summary = row['abstract']
+            # Append results
+            results.append({
+                "text": text,
+                "generated_summary": generated_summary,
+                "original_summary": target_summary,
+                "len(text)": len(text),
+                "len(summary)": len(generated_summary),
+                "len(target_summary)": len(target_summary),
+                "time_taken": response["time_taken"],
+                "memory_used": response["memory_used"],
+                "rouge1": evaluation["ROUGE"]["rouge1"],
+                "rouge2": evaluation["ROUGE"]["rouge2"],
+                "rougeL": evaluation["ROUGE"]["rougeL"],
+                "BERTScore F1": evaluation["BERTScore F1"],
+                "complexity": "easy"
+            })
+    finally:
+        # Convert results to DataFrame
+        results_df = pd.DataFrame(results)
+        # Save the DataFrame to a file
+        results_df.to_csv("evaluation_results_cloud_x_sum.csv", index=False)
+        print("Evaluation results saved to evaluation_results_cloud_x_sum.csv")
 
-        # Summarize locally
-        response = summarize_local(text)
-        generated_summary = response["summary"]
+    # results = []
+    # # Load dataset
+    # df = pd.read_parquet('dataset/arxiv.parquet')
+    # # Randomly sample 50 rows
+    # sampled_df = df.sample(50, random_state=42)
+    # print("---------Arxiv---------")
+    # for _, row in sampled_df.iterrows():
+    #     text = row['article']
+    #     target_summary = row['abstract']
+    #
+    #     # Summarize locally
+    #     response = summarize(text)
+    #     generated_summary = response["summary"]
+    #
+    #     # Evaluate summary quality
+    #     evaluation = evaluate_summary_quality(generated_summary, target_summary)
+    #
+    #     # Append results
+    #     results.append({
+    #         "text": text,
+    #         "generated_summary": generated_summary,
+    #         "original_summary": target_summary,
+    #         "len(text)": len(text),
+    #         "len(summary)": len(generated_summary),
+    #         "len(target_summary)": len(target_summary),
+    #         "time_taken": response["time_taken"],
+    #         "memory_used": response["memory_used"],
+    #         "rouge1": evaluation["ROUGE"]["rouge1"],
+    #         "rouge2": evaluation["ROUGE"]["rouge2"],
+    #         "rougeL": evaluation["ROUGE"]["rougeL"],
+    #         "BERTScore F1": evaluation["BERTScore F1"],
+    #         "complexity": "medium"
+    #     })
+    # # Convert results to DataFrame
+    # results_df = pd.DataFrame(results)
+    # # Save the DataFrame to a file
+    # results_df.to_csv("evaluation_results_local_arxiv.csv", index=False)
+    # print("Evaluation results saved to evaluation_results_arxiv.csv")
 
-        # Evaluate summary quality
-        evaluation = evaluate_summary_quality(generated_summary, target_summary)
-
-        # Append results
-        results.append({
-            "text": text,
-            "generated_summary": generated_summary,
-            "original_summary": target_summary,
-            "len(text)": len(text),
-            "len(summary)": len(generated_summary),
-            "len(target_summary)": len(target_summary),
-            "time_taken": response["time_taken"],
-            "memory_used": response["memory_used"],
-            "rouge1": evaluation["ROUGE"]["rouge1"],
-            "rouge2": evaluation["ROUGE"]["rouge2"],
-            "rougeL": evaluation["ROUGE"]["rougeL"],
-            "BERTScore F1": evaluation["BERTScore F1"],
-            "complexity": "medium"
-        })
-    # Load dataset
-    df = pd.read_parquet('dataset/gov-report.parquet')
-    # Randomly sample 500 rows
-    sampled_df = df.sample(500, random_state=42)
-    for _, row in sampled_df.iterrows():
-        text = row['report']
-        target_summary = row['summary']
-
-        # Summarize locally
-        response = summarize_local(text)
-        generated_summary = response["summary"]
-
-        # Evaluate summary quality
-        evaluation = evaluate_summary_quality(generated_summary, target_summary)
-
-        # Append results
-        results.append({
-            "text": text,
-            "generated_summary": generated_summary,
-            "original_summary": target_summary,
-            "len(text)": len(text),
-            "len(summary)": len(generated_summary),
-            "len(target_summary)": len(target_summary),
-            "time_taken": response["time_taken"],
-            "memory_used": response["memory_used"],
-            "rouge1": evaluation["ROUGE"]["rouge1"],
-            "rouge2": evaluation["ROUGE"]["rouge2"],
-            "rougeL": evaluation["ROUGE"]["rougeL"],
-            "BERTScore F1": evaluation["BERTScore F1"],
-            "complexity": "difficult"
-        })
-    # Convert results to DataFrame
-    results_df = pd.DataFrame(results)
-    # Save the DataFrame to a file
-    results_df.to_csv("evaluation_results_local.csv", index=False)
-    print("Evaluation results saved to evaluation_results_local.csv")
+    # results = []
+    # # Load dataset
+    # df = pd.read_parquet('dataset/gov-report.parquet')
+    # # Randomly sample 50 rows
+    # sampled_df = df.sample(50, random_state=42)
+    # print("---------Gov-Report---------")
+    # count = 0
+    # try:
+    #     for _, row in sampled_df.iterrows():
+    #         text = row['report']
+    #         target_summary = row['summary']
+    #
+    #         # Summarize locally
+    #         response = summarize(text)
+    #         while "error" in response:
+    #             response = summarize(text)
+    #         generated_summary = response["summary"]
+    #
+    #         # Evaluate summary quality
+    #         evaluation = evaluate_summary_quality(generated_summary, target_summary)
+    #
+    #         # Append results
+    #         results.append({
+    #             "text": text,
+    #             "generated_summary": generated_summary,
+    #             "original_summary": target_summary,
+    #             "len(text)": len(text),
+    #             "len(summary)": len(generated_summary),
+    #             "len(target_summary)": len(target_summary),
+    #             "time_taken": response["time_taken"],
+    #             "memory_used": response["memory_used"],
+    #             "rouge1": evaluation["ROUGE"]["rouge1"],
+    #             "rouge2": evaluation["ROUGE"]["rouge2"],
+    #             "rougeL": evaluation["ROUGE"]["rougeL"],
+    #             "BERTScore F1": evaluation["BERTScore F1"],
+    #             "complexity": "difficult"
+    #         })
+    #         count += 1
+    #         print(count)
+    # finally:
+    #     # Convert results to DataFrame
+    #     results_df = pd.DataFrame(results)
+    #     # Save the DataFrame to a file
+    #     results_df.to_csv("evaluation_results_cloud_gov_report.csv", index=False)
+    #     print("Evaluation results saved to evaluation_results_cloud_gov_report.csv")
 
 
 if __name__ == "__main__":
