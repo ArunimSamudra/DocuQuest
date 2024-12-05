@@ -29,7 +29,7 @@ class RequestHandler:
 
         response = llm.summarize_text(document_text)
         # Fallback to local if cloud fails
-        if response["error"] is not None and use_cloud:
+        if "error" in response is not None and use_cloud:
             llm = self.llm_factory.create(use_cloud, model, tokenizer)
             return llm.summarize_text(document_text)
 
@@ -47,7 +47,7 @@ class RequestHandler:
 
         answer = llm.answer(context, question)
         # Fallback to local if cloud fails
-        if answer["error"] is not None and use_cloud:
+        if "error" in answer is not None and use_cloud:
             llm = self.llm_factory.create(use_cloud, model, tokenizer)
             return llm.answer(context, question)
 

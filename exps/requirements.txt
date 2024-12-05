@@ -6,3 +6,4 @@ scikit-learn
 absl-py
 nltk
 rouge-score
+matplotlib

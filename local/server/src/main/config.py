@@ -3,7 +3,7 @@ import os
 
 class Config:
     SERVER_URL = "http://127.0.0.1:8080"
-    DECISION_THRESHOLD = 1000  # Word limit for using cloud LLM
+    DECISION_THRESHOLD = 5000  # Word limit for using local LLM
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     LOCAL_MODEL_PATH = os.path.join(ROOT_DIR, "models/llm")
     CLASSIFIER_MODEL_PATH = os.path.join(ROOT_DIR, "models/classifier/logistic_regression_model.pkl")

@@ -6,48 +6,37 @@ from main.config import Config
 
 
 def use_cloud_llm(document_text):
-    # Route to cloud if the document is large or complex
-    # return len(document_text.split()) > Config.DECISION_THRESHOLD
-    # returning True always for now
-    # 4. Maybe a feedback mechanism
-
-    # Step 2: Check document length
-    # word_count = len(document_text.split())
-    # if word_count > Config.DECISION_THRESHOLD:
-    #     print(f"Routing to cloud: Document is too large ({word_count} words).")
-    #     return True
-
     # Step 1: Check local system health
-    # cpu_usage, memory_available, disk_free = get_local_system_metrics()
-    # # Decision logic
-    # if cpu_usage > Config.CPU_THRESHOLD:
-    #     print(f"Routing to cloud: CPU usage too high ({cpu_usage}%).")
-    #     return True
-    # if memory_available < Config.MEMORY_THRESHOLD:
-    #     print(f"Routing to cloud: Insufficient memory available ({memory_available} MB).")
-    #     return True
-    # if disk_free < Config.DISK_THRESHOLD:
-    #     print(f"Routing to cloud: Insufficient disk space ({disk_free} GB).")
-    #     return True
-    #
-    # # Step 3: Predict document complexity using the classifier
-    # prediction = evaluate_document_complexity(document_text)
-    #
-    # # Decide based on the prediction
-    # if prediction == 0: ##easy
-    #     print("Processing locally: Document is classified as easy.")
-    #     return False
-    # elif prediction == 1: ##medium
-    #     print("Routing to cloud: Document is classified as medium complexity.")
-    #   maybe here decide based on doc length
-    #     return True
-    # elif prediction == 2: ##diffcult
-    #     print("Routing to cloud: Document is classified as difficult.")
-    #     return True
-    #
-    # # Default fallback
-    # print("Processing locally: Default fallback.")
-    return True
+    cpu_usage, memory_available, disk_free = get_local_system_metrics()
+    # Decision logic
+    if cpu_usage > Config.CPU_THRESHOLD:
+        print(f"Routing to cloud: CPU usage too high ({cpu_usage}%).")
+        return True
+    if memory_available < Config.MEMORY_THRESHOLD:
+        print(f"Routing to cloud: Insufficient memory available ({memory_available} MB).")
+        return True
+    if disk_free < Config.DISK_THRESHOLD:
+        print(f"Routing to cloud: Insufficient disk space ({disk_free} GB).")
+        return True
+
+    # Step 2: Predict document complexity using the classifier
+    prediction = evaluate_document_complexity(document_text)
+
+    # Decide based on the prediction
+    if prediction == 0: ##easy
+        print("Processing locally: Document is classified as easy.")
+        return False
+    elif prediction == 1: ##medium
+        if len(document_text) > Config.DECISION_THRESHOLD:
+            print("Routing to cloud: Document is classified as medium complexity and length greater than decision threshold")
+            return True
+    elif prediction == 2: ##diffcult
+        print("Routing to cloud: Document is classified as difficult.")
+        return True
+
+    # Default fallback
+    print("Processing locally: Default fallback.")
+    return False
 
 def get_local_system_metrics():
     """
