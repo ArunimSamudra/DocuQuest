@@ -1,4 +1,3 @@
-import json
 import time
 from beam import endpoint, Image, Volume, env
 
