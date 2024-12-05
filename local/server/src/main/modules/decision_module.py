@@ -47,7 +47,7 @@ def use_cloud_llm(document_text):
     #
     # # Default fallback
     # print("Processing locally: Default fallback.")
-    return False
+    return True
 
 def get_local_system_metrics():
     """
