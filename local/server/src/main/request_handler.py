@@ -19,19 +19,26 @@ class RequestHandler:
         Summarizes the document text and indexes it asynchronously.
         """
         use_cloud = use_cloud_llm(document_text)
+        if use_cloud:
+            print("Using cloud")
+        else:
+            print("Using local")
         llm = self.llm_factory.create(use_cloud, model, tokenizer)
 
         # Perform asynchronous indexing
         if session_id not in self.indexing_tasks:
+            print("Creating indexing task")
             self.indexing_tasks[session_id] = asyncio.create_task(
                 self.doc_retriever.index(session_id, document_text)
             )
 
+        print("Going to summarize")
         response = llm.summarize_text(document_text)
         # Fallback to local if cloud fails
         if "error" in response is not None and use_cloud:
             llm = self.llm_factory.create(use_cloud, model, tokenizer)
             return llm.summarize_text(document_text)
+        return response
 
     async def answer(self, model, tokenizer, session_id, question):
         """
@@ -50,6 +57,7 @@ class RequestHandler:
         if "error" in answer is not None and use_cloud:
             llm = self.llm_factory.create(use_cloud, model, tokenizer)
             return llm.answer(context, question)
+        return answer
 
     async def delete_session(self, session_id):
         if session_id in self.doc_retriever.session_stores:

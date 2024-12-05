@@ -2,11 +2,13 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 
+from main.config import Config
+
 
 class DocumentRetriever:
 
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=Config.OPENAI_API_KEY)
         self.session_stores = {}
 
     async def index(self, session_id, text):

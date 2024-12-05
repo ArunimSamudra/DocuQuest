@@ -71,14 +71,12 @@ if st.session_state.current_session:
             st.markdown(message["content"])
 
     # Handle file upload and summarization
-    print(st.session_state)
     uploaded_file = st.file_uploader(
         "Upload a PDF or TXT file",
         type=["pdf", "txt"],
         disabled=st.session_state.sessions[st.session_state.current_session]['file_uploaded']  # Disable if file is already uploaded
     )
     call_backend = False
-    print("length", len(st.session_state.sessions))
     if len(st.session_state.sessions) == 1:
         call_backend = True
     else:
