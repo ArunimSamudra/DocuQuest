@@ -7,7 +7,7 @@ if env.is_remote():
     import psutil
 
 # Load the LLM and tokenizer
-DRAFT_MODEL_NAME = "meta-llama/Llama-3.2-3B-Instruct"
+DRAFT_MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 BEAM_VOLUME_PATH = "./cached_models"
 
 

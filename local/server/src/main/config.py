@@ -12,4 +12,3 @@ class Config:
     CLOUD_API_URL = 'https://cloud-6d541cf-v4.app.beam.cloud'
     CPU_THRESHOLD = 70
     MEMORY_THRESHOLD = 3000  # MB
-    DISK_THRESHOLD = 10  # GB for LLaMA 3.2 1B

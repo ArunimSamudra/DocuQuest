@@ -15,9 +15,6 @@ def use_cloud_llm(document_text):
     if memory_available < Config.MEMORY_THRESHOLD:
         print(f"Routing to cloud: Insufficient memory available ({memory_available} MB).")
         return True
-    if disk_free < Config.DISK_THRESHOLD:
-        print(f"Routing to cloud: Insufficient disk space ({disk_free} GB).")
-        return True
 
     # Step 2: Predict document complexity using the classifier
     prediction = evaluate_document_complexity(document_text)
